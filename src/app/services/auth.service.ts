@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {jwtDecode} from "jwt-decode";
+import {Router} from "@angular/router";
 
 @Injectable({
   providedIn: 'root'
@@ -9,9 +10,9 @@ export class AuthService {
   isAuthenticated:boolean=false;
   roles:any;
   username:any;
-  accessToken!:string;
+  accessToken!:any;
 
-  constructor(private http:HttpClient) { }
+  constructor(private http:HttpClient,private router:Router) { }
   public login(username:string,password:string){
       let options={
         headers:new HttpHeaders().set("Content-Type","application/x-www-form-urlencoded")
@@ -29,5 +30,24 @@ export class AuthService {
     let jwtDecoder:any =jwtDecode(this.accessToken)
     this.username=jwtDecoder.sub;
     this.roles=jwtDecoder.scope;
+    window.localStorage.setItem("jwt-token",this.accessToken)
+  }
+
+  logout() {
+    this.isAuthenticated=false;
+    this.accessToken=undefined;
+    this.roles=undefined;
+    this.username=undefined;
+    window.localStorage.removeItem("jwt-token")
+    this.router.navigateByUrl("/login")
+
+  }
+
+  loadJwtTokenFromLocalStorage() {
+    let token=window.localStorage.getItem("jwt-token");
+    if(token){
+      this.loadProfile({"access token":token});
+      this.router.navigateByUrl("/admin/customers");
+    }
   }
 }
